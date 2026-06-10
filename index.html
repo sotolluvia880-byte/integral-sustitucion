@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Integrales por Sustitución</title>
+
+<style>
+    body{
+        font-family: Arial, sans-serif;
+        background:#0b0b0b;
+        color:white;
+        padding:25px;
+        text-align:center;
+    }
+
+    input,button{
+        padding:12px;
+        width:340px;
+        margin:10px;
+        font-size:16px;
+    }
+
+    button{
+        background:#00ffd5;
+        border:none;
+        font-weight:bold;
+        cursor:pointer;
+    }
+
+    .box{
+        margin-top:20px;
+        text-align:left;
+        max-width:750px;
+        margin-left:auto;
+        margin-right:auto;
+        background:#1a1a1a;
+        padding:18px;
+        border-radius:10px;
+        white-space:pre-line;
+        line-height:1.5;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>📘 Integrales por Sustitución</h1>
+
+<p>Ejemplos: (3x+2)^5 | e^(2x+1) | sin(4x+3) | cos(5x-1)</p>
+
+<input id="input" placeholder="Escribe la integral">
+<br>
+<button onclick="resolver()">Resolver paso a paso</button>
+
+<div id="salida" class="box"></div>
+
+<script>
+
+// =============================
+// CONVERTIR A FRACCIÓN
+// =============================
+function fraccion(num, den){
+    if(den === 1) return `${num}`;
+    if(den < 0){
+        num = -num;
+        den = -den;
+    }
+    return `${num}/${den}`;
+}
+
+// =============================
+// MOTOR PRINCIPAL
+// =============================
+function resolver(){
+
+    let f = document.getElementById("input").value.replace(/\s/g,"");
+    let out = "";
+
+    let tipo = detectarTipo(f);
+
+    if(tipo === "potencia"){
+        out = potencia(f);
+    }
+    else if(tipo === "exp"){
+        out = exponencial(f);
+    }
+    else if(tipo === "sin"){
+        out = trig(f,"sin");
+    }
+    else if(tipo === "cos"){
+        out = trig(f,"cos");
+    }
+    else{
+        out = "❌ Función no soportada\nUsa: (ax+b)^n, e^(ax+b), sin(ax+b), cos(ax+b)";
+    }
+
+    document.getElementById("salida").innerText = out;
+}
+
+// =============================
+// DETECTAR TIPO
+// =============================
+function detectarTipo(f){
+    if(/\^/.test(f) && f.includes("x")) return "potencia";
+    if(f.includes("e^")) return "exp";
+    if(f.includes("sin")) return "sin";
+    if(f.includes("cos")) return "cos";
+    return "error";
+}
+
+// =============================
+// POTENCIA (ax+b)^n
+// =============================
+function potencia(f){
+
+    let m = f.match(/\(?([\-]?\d*)x([\+\-]\d+)\)?\^(\d+)/);
+    if(!m) return "❌ Formato inválido";
+
+    let a = parseInt(m[1] || "1");
+    let b = parseInt(m[2]);
+    let n = parseInt(m[3]);
+
+    let newExp = n + 1;
+
+    let num = 1;
+    let den = a * newExp;
+
+    let coef = fraccion(num, den);
+
+    return `
+📘 TIPO: Potencia compuesta
+
+🔎 Justificación:
+Se identifica una función compuesta (ax + b)^n, por lo que se aplica sustitución u = ax + b.
+
+🔹 Paso 1: Sustitución
+u = ${a}x ${b}
+Se deriva para encontrar el cambio de variable:
+du = ${a} dx
+
+🔹 Paso 2: Reescritura
+La integral se transforma en:
+∫ u^${n} du
+
+🔹 Paso 3: Regla de potencia
+Se aplica:
+∫ u^n du = u^(n+1)/(n+1)
+
+🔹 Paso 4: Sustitución inversa
+Se regresa a x sustituyendo u = ax + b
+
+✔ Resultado final:
+${coef}(${a}x ${b})^${newExp} + C
+`;
+}
+
+// =============================
+// EXPONENCIAL
+// =============================
+function exponencial(f){
+
+    let m = f.match(/e\^\(?([\-]?\d*)x([\+\-]\d+)\)?/);
+    if(!m) return "❌ Formato inválido";
+
+    let a = parseInt(m[1] || "1");
+    let b = parseInt(m[2]);
+
+    let coef = fraccion(1, a);
+
+    return `
+📘 TIPO: Exponencial
+
+🔎 Justificación:
+La función e^(ax+b) requiere sustitución u = ax + b para simplificar la derivada interna.
+
+🔹 Paso 1: Sustitución
+u = ${a}x ${b}
+du = ${a} dx
+
+🔹 Paso 2: Integral en u
+∫ e^u du = e^u
+
+🔹 Paso 3: Regreso a x
+
+✔ Resultado final:
+${coef}e^(${a}x ${b}) + C
+`;
+}
+
+// =============================
+// TRIGONOMÉTRICAS
+// =============================
+function trig(f,type){
+
+    let regex = new RegExp(`${type}\\(?([\\-]?\\d*)x([\\+\\-]\\d+)\\)?`);
+    let m = f.match(regex);
+
+    if(!m) return "❌ Formato inválido";
+
+    let a = parseInt(m[1] || "1");
+    let b = parseInt(m[2]);
+
+    if(type === "sin"){
+
+        let coef = fraccion(-1, a);
+
+        return `
+📘 TIPO: Seno
+
+🔎 Justificación:
+Se usa sustitución u = ax + b porque la derivada interna es constante.
+
+🔹 Paso 1: Sustitución
+u = ${a}x ${b}
+du = ${a} dx
+
+🔹 Paso 2: Integral
+∫ sin(u) du = -cos(u)
+
+🔹 Paso 3: Regreso
+
+✔ Resultado final:
+${coef}cos(${a}x ${b}) + C
+`;
+    }
+
+    let coef = fraccion(1, a);
+
+    return `
+📘 TIPO: Coseno
+
+🔎 Justificación:
+Se aplica sustitución u = ax + b para simplificar la integral.
+
+🔹 Paso 1: Sustitución
+u = ${a}x ${b}
+du = ${a} dx
+
+🔹 Paso 2: Integral
+∫ cos(u) du = sin(u)
+
+🔹 Paso 3: Regreso
+
+✔ Resultado final:
+${coef}sin(${a}x ${b}) + C
+`;
+}
+
+</script>
+
+</body>
+</html>
